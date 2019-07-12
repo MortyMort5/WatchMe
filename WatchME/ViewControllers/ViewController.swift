@@ -28,6 +28,12 @@ class ViewController: UIViewController {
         setupPercentageLabel()
     }
     
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        showProgress()
+        animateCircle()
+    }
+    
     private func setupPercentageLabel() {
         view.addSubview(percentageLabel)
         percentageLabel.frame = CGRect(x: 0, y: 0, width: 100, height: 100)
@@ -78,6 +84,9 @@ class ViewController: UIViewController {
     
     private func showProgress() {
         // TODO: - Gather data and display it to the label in a percent format
+        print("showProgress : \(LogController.shared.percentOfReachingGoal())")
+        percentageLabel.text = "\(LogController.shared.percentOfReachingGoal())%"
+        
     }
     
     fileprivate func animateCircle() {
@@ -89,11 +98,29 @@ class ViewController: UIViewController {
         shapeLayer.add(basicAnimation, forKey: "urSoBasic")
     }
     
+    func promptForLogWeight() {
+        let ac = UIAlertController(title: "Enter weight", message: nil, preferredStyle: .alert)
+        ac.addTextField()
+        
+        let submitAction = UIAlertAction(title: "Log", style: .default) { [unowned ac] _ in
+            let answer = ac.textFields![0]
+            guard let weight = Int(answer.text ?? "") else { return }
+            LogController.shared.saveLog(weight: weight)
+            self.showProgress()
+        }
+        
+        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
+        
+        ac.addAction(cancelAction)
+        ac.addAction(submitAction)
+        
+        present(ac, animated: true)
+    }
+    
     // Target Actions
     
     @objc private func handleTap() {
-        showProgress()
-        animateCircle()
+        promptForLogWeight()
     }
     
     @objc private func handleEnterForeground() {
