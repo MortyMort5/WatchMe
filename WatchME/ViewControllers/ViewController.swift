@@ -8,7 +8,7 @@
 
 import UIKit
 
-class ViewController: UIViewController {
+class ViewController: UIViewController, UITextFieldDelegate {
     
     override var preferredStatusBarStyle: UIStatusBarStyle {
         return .lightContent
@@ -23,7 +23,10 @@ class ViewController: UIViewController {
         
         setupCircleLayers()
     
+        setupWeightLogLayers()
+        
         view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleTap)))
+        saveWeightButton.addTarget(self, action: #selector(saveWeightButtonTapped), for: .touchUpInside)
         
         setupPercentageLabel()
     }
@@ -31,13 +34,40 @@ class ViewController: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         showProgress()
-        animateCircle()
+    }
+    
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        switch textField {
+        case weightTextField:
+            goalTextField.becomeFirstResponder()
+        default:
+            textField.resignFirstResponder()
+        }
+        return false
     }
     
     private func setupPercentageLabel() {
-        view.addSubview(percentageLabel)
-        percentageLabel.frame = CGRect(x: 0, y: 0, width: 100, height: 100)
-        percentageLabel.center = view.center
+        self.percentStackView.addArrangedSubview(percentageLabel)
+        self.percentStackView.addArrangedSubview(percentageSubLabel)
+        view.addSubview(percentStackView)
+        percentStackView.frame = CGRect(x: 0, y: 0, width: 100, height: 100)
+        percentStackView.centerXAnchor.constraint(equalTo: self.view.centerXAnchor).isActive = true
+        percentStackView.centerYAnchor.constraint(equalTo: self.view.centerYAnchor).isActive = true
+    }
+    
+    private func setupWeightLogLayers() {
+        weightTextField.delegate = self
+        goalTextField.delegate = self
+        
+        logStackView.addArrangedSubview(weightTextField)
+        logStackView.addArrangedSubview(goalTextField)
+        logStackView.addArrangedSubview(currentWeightLabel)
+        logStackView.addArrangedSubview(saveWeightButton)
+        view.addSubview(logStackView)
+        
+        logStackView.topAnchor.constraint(equalTo: self.view.topAnchor, constant: 150).isActive = true
+        logStackView.centerXAnchor.constraint(equalTo: self.view.centerXAnchor).isActive = true
+        logStackView.widthAnchor.constraint(equalTo: self.view.widthAnchor, multiplier: 0.7).isActive = true
     }
     
     private func setupCircleLayers() {
@@ -83,10 +113,9 @@ class ViewController: UIViewController {
     }
     
     private func showProgress() {
-        // TODO: - Gather data and display it to the label in a percent format
-        print("showProgress : \(LogController.shared.percentOfReachingGoal())")
-        percentageLabel.text = "\(LogController.shared.percentOfReachingGoal())%"
-        
+        let percent = LogController.shared.percentOfReachingGoal()
+        percentageLabel.text = "\(Int(percent * 100))%"
+        shapeLayer.strokeEnd = CGFloat(percent)
     }
     
     fileprivate func animateCircle() {
@@ -98,29 +127,42 @@ class ViewController: UIViewController {
         shapeLayer.add(basicAnimation, forKey: "urSoBasic")
     }
     
-    func promptForLogWeight() {
-        let ac = UIAlertController(title: "Enter weight", message: nil, preferredStyle: .alert)
-        ac.addTextField()
-        
-        let submitAction = UIAlertAction(title: "Log", style: .default) { [unowned ac] _ in
-            let answer = ac.textFields![0]
-            guard let weight = Int(answer.text ?? "") else { return }
-            LogController.shared.saveLog(weight: weight)
-            self.showProgress()
-        }
-        
-        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
-        
-        ac.addAction(cancelAction)
-        ac.addAction(submitAction)
-        
-        present(ac, animated: true)
-    }
-    
     // Target Actions
     
+    @objc func saveWeightButtonTapped() {
+        guard let weightStr = self.weightTextField.text, !weightStr.isEmpty,
+            let goalStr = self.goalTextField.text, !goalStr.isEmpty else { return }
+        
+        guard let weight = Double(weightStr), let goal = Double(goalStr) else { return }
+        
+        LogController.shared.saveLog(goal: goal, weight: weight)
+        
+        logStackView.isHidden = true
+
+        self.weightTextField.resignFirstResponder()
+        self.goalTextField.resignFirstResponder()
+        self.weightTextField.text = ""
+        
+        showProgress()
+    }
+    
     @objc private func handleTap() {
-        promptForLogWeight()
+        logStackView.isHidden = !logStackView.isHidden
+        
+        if logStackView.isHidden {
+            weightTextField.resignFirstResponder()
+            goalTextField.resignFirstResponder()
+        } else {
+            weightTextField.becomeFirstResponder()
+            
+            if let goal = LogController.shared.logs.last?.goal {
+                self.goalTextField.text = "\(Int(goal))"
+            }
+            
+            if let currentWeight = LogController.shared.logs.last?.weight {
+                self.currentWeightLabel.text = " Current Weight : \(Int(currentWeight)) lbs"
+            }
+        }
     }
     
     @objc private func handleEnterForeground() {
@@ -142,6 +184,69 @@ class ViewController: UIViewController {
         label.textColor = .white
         label.font = UIFont.boldSystemFont(ofSize: 32)
         return label
+    }()
+    
+    let percentageSubLabel: UILabel = {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.textAlignment = .center
+        label.text = "Completed"
+        label.textColor = .white
+        label.font = UIFont.boldSystemFont(ofSize: 15)
+        return label
+    }()
+    
+    let weightTextField: UITextField = {
+        let textField = UITextField()
+        textField.translatesAutoresizingMaskIntoConstraints = false
+        textField.placeholder = "weight:"
+        textField.borderStyle = .roundedRect
+        return textField
+    }()
+    
+    let currentWeightLabel: UILabel = {
+        let label = UILabel()
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.textColor = .white
+//        label.font = UIFont.boldSystemFont(ofSize: 20)
+        return label
+    }()
+    
+    let goalTextField: UITextField = {
+        let textField = UITextField()
+        textField.translatesAutoresizingMaskIntoConstraints = false
+        textField.placeholder = "goal weight:"
+        textField.borderStyle = .roundedRect
+        return textField
+    }()
+    
+    let saveWeightButton: UIButton = {
+        let button = UIButton()
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.setTitle("Save", for: .normal)
+        button.backgroundColor = .outlineStrokeColor
+        button.setTitleColor(.white, for: .normal)
+        button.layer.cornerRadius = 5
+        return button
+    }()
+    
+    let logStackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        stackView.spacing = 5
+        stackView.isHidden = true
+        stackView.axis = .vertical
+        stackView.distribution = .fill
+        return stackView
+    }()
+    
+    let percentStackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        stackView.spacing = 1
+        stackView.axis = .vertical
+        stackView.distribution = .fill
+        return stackView
     }()
 }
 

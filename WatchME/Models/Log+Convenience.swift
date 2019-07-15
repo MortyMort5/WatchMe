@@ -10,9 +10,10 @@ import Foundation
 import CoreData
 
 extension Log {
-    convenience init(weight: Int, timestamp: Date = Date(), context: NSManagedObjectContext = Stack.context) {
+    convenience init(goal: Double, weight: Double, timestamp: Date = Date(), context: NSManagedObjectContext = Stack.context) {
         self.init(context: context)
-        self.weight = Int32(weight)
+        self.goal = goal
+        self.weight = weight
         self.timestamp = timestamp
     }
 }

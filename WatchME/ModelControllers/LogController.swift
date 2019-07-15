@@ -10,20 +10,21 @@ import UIKit
 import CoreData
 
 class LogController {
-    func saveLog(weight: Int) {
-        let _ = Log(weight: weight)
+    func saveLog(goal: Double = 0, weight: Double = 0) {
+        let _ = Log(goal: goal, weight: weight)
         saveToPersistentStore()
         print("Saved Log")
     }
     
-    func percentOfReachingGoal() -> Int32 {
-        var percent: Int32 = 0
+    func percentOfReachingGoal() -> Double {
+        var percent: Double = 0
         let startWeight = self.logs.first?.weight ?? 0
         let currentWeight = self.logs.last?.weight ?? 0
-        print(startWeight)
-        print(currentWeight)
-        percent = ((startWeight - currentWeight) / self.goal) * 100
-        print(percent)
+        let goal = self.logs.last?.goal ?? 0
+        
+        if startWeight == 0 { return 0 }
+        
+        percent = ((startWeight - currentWeight) / (startWeight - goal))
         return percent
     }
     
@@ -42,5 +43,4 @@ class LogController {
     }
     
     static let shared = LogController()
-    let goal: Int32 = 190
 }
