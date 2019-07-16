@@ -1,0 +1,6 @@
+framework module Pods_WatchME {
+  umbrella header "Pods-WatchME-umbrella.h"
+
+  export *
+  module * { export * }
+}

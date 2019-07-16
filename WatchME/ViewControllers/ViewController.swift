@@ -10,12 +10,18 @@ import UIKit
 
 class ViewController: UIViewController, UITextFieldDelegate {
     
+    private let segueIdentifier = "graphSegue"
+    
     override var preferredStatusBarStyle: UIStatusBarStyle {
         return .lightContent
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(swipeLeftGesture(gesture:)))
+        swipeLeft.direction = .left
+        self.view.addGestureRecognizer(swipeLeft)
         
         setupNotificationObservers()
         
@@ -29,6 +35,10 @@ class ViewController: UIViewController, UITextFieldDelegate {
         saveWeightButton.addTarget(self, action: #selector(saveWeightButtonTapped), for: .touchUpInside)
         
         setupPercentageLabel()
+    }
+    
+    @objc func swipeLeftGesture(gesture: UIGestureRecognizer) {
+        self.performSegue(withIdentifier: segueIdentifier, sender: nil)
     }
     
     override func viewDidAppear(_ animated: Bool) {

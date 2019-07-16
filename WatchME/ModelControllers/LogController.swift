@@ -28,6 +28,24 @@ class LogController {
         return percent
     }
     
+    func logCountForSameDay() -> (weightLogs: [Double], dayLogs: [Double]) {
+        var counts: [Double: Int] = [:]
+        var weights: [Double] = []
+        var days: [Double] = []
+        
+        for log in self.logs {
+            counts[log.weight] = (counts[log.weight] ?? 0) + 1
+        }
+        
+        weights = counts.keys.sorted()
+        for weight in weights {
+            guard let dayCount = counts[weight] else { return ([],[]) }
+             days.append(Double(dayCount * 20))
+        }
+        
+        return (weights, days)
+    }
+    
     private func saveToPersistentStore() {
         do {
             try Stack.context.save()
