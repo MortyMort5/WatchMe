@@ -21,8 +21,6 @@ class GraphViewController: UIViewController {
         
         self.view.backgroundColor = .backgroundColor
         chartView.contentMode = .scaleAspectFit
-
-        
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -31,7 +29,7 @@ class GraphViewController: UIViewController {
     }
     
     @objc func swipeRightGesture(gesture: UIGestureRecognizer) {
-        self.dismiss(animated: true, completion: nil)
+        navigationController?.popViewController(animated: true)
     }
 
 }

@@ -37,10 +37,6 @@ class ViewController: UIViewController, UITextFieldDelegate {
         setupPercentageLabel()
     }
     
-    @objc func swipeLeftGesture(gesture: UIGestureRecognizer) {
-        self.performSegue(withIdentifier: segueIdentifier, sender: nil)
-    }
-    
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         showProgress()
@@ -138,6 +134,10 @@ class ViewController: UIViewController, UITextFieldDelegate {
     }
     
     // Target Actions
+    
+    @objc func swipeLeftGesture(gesture: UIGestureRecognizer) {
+        self.performSegue(withIdentifier: segueIdentifier, sender: self)
+    }
     
     @objc func saveWeightButtonTapped() {
         guard let weightStr = self.weightTextField.text, !weightStr.isEmpty,

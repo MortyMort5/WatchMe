@@ -11,19 +11,27 @@ import Macaw
 
 class ChartView: MacawView {
     
-    static var logs                    = LogController.shared.logCountForSameDay()
-    static let maxValue                = 10
-    static let maxValueLineHeight      = 2
-    static let lineWidth: Double       = 380
+    static var logs                     = LogController.shared.logCountForSameDay()
+    static let maxValue                 = 10
+    static let lineWidth: Double        = 380
     
-    static let dataDivisor             = Double(maxValue/maxValueLineHeight)
     static let weightLogs: [Double]     = logs.weightLogs
-    static let dayLogs: [Double]          = logs.dayLogs
-    static var animations: [Animation] = []
+    static let dayLogs: [Double]        = logs.dayLogs
+    static var animations: [Animation]  = []
     
     required init?(coder aDecoder: NSCoder) {
-        super.init(node: ChartView.createChart(), coder: aDecoder)
+        super.init(node: ChartView.checkForData(), coder: aDecoder)
         backgroundColor = .clear
+    }
+    
+    private static func checkForData() -> Group {
+        let logs = LogController.shared.logCountForSameDay()
+        if logs.weightLogs.isEmpty {
+            
+        }
+        
+        
+        return createChart()
     }
     
     private static func createChart() -> Group {
@@ -62,7 +70,7 @@ class ChartView: MacawView {
         
         for i in 1...weightLogs.count {
             let x = (Double(i) * 50)
-            let valueText = Text(text: "\(weightLogs[i - 1])", align: .max, baseline: .mid, place: .move(dx: x, dy: chartBaseY + 15))
+            let valueText = Text(text: "\(Int(weightLogs[i - 1]))", align: .max, baseline: .mid, place: .move(dx: x, dy: chartBaseY + 15))
             valueText.fill = Color.white
             newNodes.append(valueText)
         }
