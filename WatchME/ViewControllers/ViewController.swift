@@ -10,7 +10,16 @@ import UIKit
 
 class ViewController: UIViewController, UITextFieldDelegate {
     
+    // MARK: - Properties
+    
+    var shapeLayer: CAShapeLayer!
+    var pulsatingLayer: CAShapeLayer!
     private let segueIdentifier = "graphSegue"
+    let numberToolbar: UIToolbar = UIToolbar()
+    var errorTitle: String = ""
+    var errorMessage: String = ""
+    
+    // MARK: - Override Functions
     
     override var preferredStatusBarStyle: UIStatusBarStyle {
         return .lightContent
@@ -19,20 +28,17 @@ class ViewController: UIViewController, UITextFieldDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(swipeLeftGesture(gesture:)))
-        swipeLeft.direction = .left
-        self.view.addGestureRecognizer(swipeLeft)
+        view.backgroundColor = UIColor.backgroundColor
+        
+        setupToolBar()
+        
+        setupGestureRecognizer()
         
         setupNotificationObservers()
         
-        view.backgroundColor = UIColor.backgroundColor
-        
         setupCircleLayers()
     
-        setupWeightLogLayers()
-        
-        view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleTap)))
-        saveWeightButton.addTarget(self, action: #selector(saveWeightButtonTapped), for: .touchUpInside)
+        setupTextFieldLayers()
         
         setupPercentageLabel()
     }
@@ -42,15 +48,71 @@ class ViewController: UIViewController, UITextFieldDelegate {
         showProgress()
     }
     
-    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-        switch textField {
-        case weightTextField:
-            goalTextField.becomeFirstResponder()
-        default:
-            textField.resignFirstResponder()
-        }
-        return false
+    // MARK: - TextField Delegate Functions
+    
+    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+        let allowedCharacters = "0123456789."
+        let allowedCharacterSet = CharacterSet(charactersIn: allowedCharacters)
+        let typedCharacterSet = CharacterSet(charactersIn: string)
+        return allowedCharacterSet.isSuperset(of: typedCharacterSet)
     }
+    
+    // MARK: - Helper Functions
+    
+    private func showProgress() {
+        let percent = LogController.shared.percentOfReachingGoal()
+        percentageLabel.text = "\(Int(percent * 100))%"
+        shapeLayer.strokeEnd = CGFloat(percent)
+    }
+    
+    // MARK: - Setup View Functions
+    
+    private func setupGestureRecognizer() {
+        let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(swipeLeftGesture(gesture:)))
+        swipeLeft.direction = .left
+        self.view.addGestureRecognizer(swipeLeft)
+        
+        view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleTap)))
+    }
+    
+    private func setupToolBar() {
+        numberToolbar.barStyle = UIBarStyle.default
+        numberToolbar.items = [
+            UIBarButtonItem(title: "Cancel", style: UIBarButtonItem.Style.plain, target: self, action: #selector(cancelButtonTapped)),
+            UIBarButtonItem(barButtonSystemItem: UIBarButtonItem.SystemItem.flexibleSpace, target: self, action: nil),
+            UIBarButtonItem(title: "Done", style: UIBarButtonItem.Style.done, target: self, action: #selector(saveWeightButtonTapped))
+        ]
+        
+        numberToolbar.sizeToFit()
+        weightTextField.inputAccessoryView = numberToolbar
+        goalTextField.inputAccessoryView = numberToolbar
+    }
+    
+    private func setupTextFieldLayers() {
+        weightTextField.delegate = self
+        goalTextField.delegate = self
+        
+        weightTextField.keyboardType = .decimalPad
+        goalTextField.keyboardType = .decimalPad
+        
+        logStackView.addArrangedSubview(weightTextField)
+        logStackView.addArrangedSubview(goalTextField)
+        logStackView.addArrangedSubview(currentWeightLabel)
+        view.addSubview(logStackView)
+        
+        logStackView.topAnchor.constraint(equalTo: self.view.topAnchor, constant: 150).isActive = true
+        logStackView.centerXAnchor.constraint(equalTo: self.view.centerXAnchor).isActive = true
+        logStackView.widthAnchor.constraint(equalTo: self.view.widthAnchor, multiplier: 0.7).isActive = true
+    }
+    
+    private func setupNotificationObservers() {
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(handleEnterForeground),
+                                               name: UIApplication.willEnterForegroundNotification,
+                                               object: nil)
+    }
+    
+    // MARK: - Setup Circle Layers
     
     private func setupPercentageLabel() {
         self.percentStackView.addArrangedSubview(percentageLabel)
@@ -59,21 +121,6 @@ class ViewController: UIViewController, UITextFieldDelegate {
         percentStackView.frame = CGRect(x: 0, y: 0, width: 100, height: 100)
         percentStackView.centerXAnchor.constraint(equalTo: self.view.centerXAnchor).isActive = true
         percentStackView.centerYAnchor.constraint(equalTo: self.view.centerYAnchor).isActive = true
-    }
-    
-    private func setupWeightLogLayers() {
-        weightTextField.delegate = self
-        goalTextField.delegate = self
-        
-        logStackView.addArrangedSubview(weightTextField)
-        logStackView.addArrangedSubview(goalTextField)
-        logStackView.addArrangedSubview(currentWeightLabel)
-        logStackView.addArrangedSubview(saveWeightButton)
-        view.addSubview(logStackView)
-        
-        logStackView.topAnchor.constraint(equalTo: self.view.topAnchor, constant: 150).isActive = true
-        logStackView.centerXAnchor.constraint(equalTo: self.view.centerXAnchor).isActive = true
-        logStackView.widthAnchor.constraint(equalTo: self.view.widthAnchor, multiplier: 0.7).isActive = true
     }
     
     private func setupCircleLayers() {
@@ -91,13 +138,8 @@ class ViewController: UIViewController, UITextFieldDelegate {
         view.layer.addSublayer(shapeLayer)
     }
     
-    private func setupNotificationObservers() {
-        NotificationCenter.default.addObserver(self, selector: #selector(handleEnterForeground), name: UIApplication.willEnterForegroundNotification, object: nil)
-    }
-    
     private func createCircleShapeLayer(strokeColor: UIColor, fillColor: UIColor) -> CAShapeLayer {
         let circularPath = UIBezierPath(arcCenter: .zero, radius: 100, startAngle: 0, endAngle: 2 * CGFloat.pi, clockwise: true)
-        
         let layer = CAShapeLayer()
         layer.path = circularPath.cgPath
         layer.strokeColor = strokeColor.cgColor
@@ -108,7 +150,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
         return layer
     }
     
-    private func  animatePulsatingLayer() {
+    private func animatePulsatingLayer() {
         let animation = CABasicAnimation(keyPath: "transform.scale")
         animation.toValue = 1.5
         animation.duration = 0.8
@@ -118,42 +160,44 @@ class ViewController: UIViewController, UITextFieldDelegate {
         pulsatingLayer.add(animation, forKey: "pulsing")
     }
     
-    private func showProgress() {
-        let percent = LogController.shared.percentOfReachingGoal()
-        percentageLabel.text = "\(Int(percent * 100))%"
-        shapeLayer.strokeEnd = CGFloat(percent)
-    }
-    
-    fileprivate func animateCircle() {
-        let basicAnimation = CABasicAnimation(keyPath: "strokeEnd")
-        basicAnimation.toValue = 1
-        basicAnimation.duration = 2
-        basicAnimation.fillMode = CAMediaTimingFillMode.forwards
-        basicAnimation.isRemovedOnCompletion = false
-        shapeLayer.add(basicAnimation, forKey: "urSoBasic")
-    }
-    
-    // Target Actions
-    
-    @objc func swipeLeftGesture(gesture: UIGestureRecognizer) {
-        self.performSegue(withIdentifier: segueIdentifier, sender: self)
-    }
+    // MARK: - Target Actions
     
     @objc func saveWeightButtonTapped() {
         guard let weightStr = self.weightTextField.text, !weightStr.isEmpty,
-            let goalStr = self.goalTextField.text, !goalStr.isEmpty else { return }
+            let goalStr = self.goalTextField.text, !goalStr.isEmpty else {
+                errorTitle   = "Missing Field"
+                errorMessage = "Need to have a Goal entered and current weight."
+                StaticFunctions.showErrorAlert(viewController: self, errorTitle: errorTitle, errorMessage: errorMessage)
+                return
+        }
         
-        guard let weight = Double(weightStr), let goal = Double(goalStr) else { return }
+        guard let weight = Double(weightStr), let goal = Double(goalStr) else {
+            errorTitle   = "Invalid Input"
+            errorMessage = "Only enter numbers and decimals"
+            StaticFunctions.showErrorAlert(viewController: self, errorTitle: errorTitle, errorMessage: errorMessage)
+            return
+        }
         
         LogController.shared.saveLog(goal: goal, weight: weight)
         
         logStackView.isHidden = true
-
+        
         self.weightTextField.resignFirstResponder()
         self.goalTextField.resignFirstResponder()
         self.weightTextField.text = ""
         
         showProgress()
+    }
+    
+    @objc func cancelButtonTapped () {
+        weightTextField.text = ""
+        weightTextField.resignFirstResponder()
+        goalTextField.resignFirstResponder()
+        logStackView.isHidden = true
+    }
+    
+    @objc func swipeLeftGesture(gesture: UIGestureRecognizer) {
+        self.performSegue(withIdentifier: segueIdentifier, sender: self)
     }
     
     @objc private func handleTap() {
@@ -179,12 +223,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
         animatePulsatingLayer()
     }
     
-    // Properties
-    
-    var shapeLayer: CAShapeLayer!
-    var pulsatingLayer: CAShapeLayer!
-    
-    // UIComponents
+    // MARK: - UIComponents
     
     let percentageLabel: UILabel = {
         let label = UILabel()
@@ -228,16 +267,6 @@ class ViewController: UIViewController, UITextFieldDelegate {
         textField.placeholder = "goal weight:"
         textField.borderStyle = .roundedRect
         return textField
-    }()
-    
-    let saveWeightButton: UIButton = {
-        let button = UIButton()
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.setTitle("Save", for: .normal)
-        button.backgroundColor = .outlineStrokeColor
-        button.setTitleColor(.white, for: .normal)
-        button.layer.cornerRadius = 5
-        return button
     }()
     
     let logStackView: UIStackView = {

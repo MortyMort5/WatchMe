@@ -25,11 +25,11 @@ class ChartView: MacawView {
     }
     
     private static func checkForData() -> Group {
-        let logs = LogController.shared.logCountForSameDay()
+        logs = LogController.shared.logCountForSameDay()
         if logs.weightLogs.isEmpty {
-            
+            print("NO LOGS")
+            return Group()
         }
-        
         
         return createChart()
     }
@@ -45,13 +45,12 @@ class ChartView: MacawView {
         let lineInterval        = Int(maxValue/maxLines)
         let yAxisHeight: Double = 200
         let lineSpacing: Double = 40
-        
-        var newNodes: [Node] = []
+        var newNodes: [Node]    = []
         
         for i in 1...maxLines {
-            let y = yAxisHeight - (Double(i) * lineSpacing)
-            let valueLine = Line(x1: -5, y1: y, x2: lineWidth, y2: y).stroke(fill: Color.white.with(a: 0.10))
-            let valueText = Text(text: "\(i * lineInterval)", align: .max, baseline: .mid, place: .move(dx: -10, dy: y))
+            let y          = yAxisHeight - (Double(i) * lineSpacing)
+            let valueLine  = Line(x1: -5, y1: y, x2: lineWidth, y2: y).stroke(fill: Color.white.with(a: 0.10))
+            let valueText  = Text(text: "\(i * lineInterval)", align: .max, baseline: .mid, place: .move(dx: -10, dy: y))
             valueText.fill = Color.white
             
             newNodes.append(valueLine)
@@ -66,11 +65,11 @@ class ChartView: MacawView {
     
     private static func addXAxisItems() -> [Node] {
         let chartBaseY: Double = 200
-        var newNodes: [Node] = []
+        var newNodes: [Node]   = []
         
         for i in 1...weightLogs.count {
-            let x = (Double(i) * 50)
-            let valueText = Text(text: "\(Int(weightLogs[i - 1]))", align: .max, baseline: .mid, place: .move(dx: x, dy: chartBaseY + 15))
+            let x          = (Double(i) * 50)
+            let valueText  = Text(text: "\(Int(weightLogs[i - 1]))", align: .max, baseline: .mid, place: .move(dx: x, dy: chartBaseY + 15))
             valueText.fill = Color.white
             newNodes.append(valueText)
         }
@@ -82,7 +81,7 @@ class ChartView: MacawView {
     }
     
     private static func createBars() -> Group {
-        let fill = LinearGradient(degree: 90, from: Color(val: 0xff4704), to: Color(val: 0xff4704).with(a: 0.33))
+        let fill  = LinearGradient(degree: 90, from: Color(val: 0xff4704), to: Color(val: 0xff4704).with(a: 0.33))
         let items = dayLogs.map { _ in Group() }
         
         animations = items.enumerated().map { (i: Int, item: Group) in
@@ -103,11 +102,11 @@ class ChartView: MacawView {
     
     
     private static func createDummyData() -> [SwiftNews] {
-        let one = SwiftNews(showNumber: "55", viewCount: 2834)
-        let two = SwiftNews(showNumber: "23", viewCount: 3354)
+        let one   = SwiftNews(showNumber: "55", viewCount: 2834)
+        let two   = SwiftNews(showNumber: "23", viewCount: 3354)
         let three = SwiftNews(showNumber: "74", viewCount: 1254)
-        let four = SwiftNews(showNumber: "23", viewCount: 3325)
-        let five = SwiftNews(showNumber: "87", viewCount: 3123)
+        let four  = SwiftNews(showNumber: "23", viewCount: 3325)
+        let five  = SwiftNews(showNumber: "87", viewCount: 3123)
         
         return [one, two, three, four, five]
     }

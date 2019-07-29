@@ -20,16 +20,31 @@ class GraphViewController: UIViewController {
         self.view.addGestureRecognizer(swipeRight)
         
         self.view.backgroundColor = .backgroundColor
+
         chartView.contentMode = .scaleAspectFit
     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        ChartView.playAnimations()
+        
+        let logs = LogController.shared.logCountForSameDay()
+        if logs.weightLogs.isEmpty {
+            self.showNoLogAlert()
+        } else {
+            ChartView.playAnimations()
+        } 
+    }
+    
+    func showNoLogAlert() {
+        let alertController = UIAlertController(title: "No Logs", message: "You need to log a weight first.", preferredStyle: .alert)
+        let okAlertAction = UIAlertAction(title: "OK", style: .default) { (_) in
+            self.navigationController?.popViewController(animated: true)
+        }
+        alertController.addAction(okAlertAction)
+        self.present(alertController, animated: true)
     }
     
     @objc func swipeRightGesture(gesture: UIGestureRecognizer) {
         navigationController?.popViewController(animated: true)
     }
-
 }
