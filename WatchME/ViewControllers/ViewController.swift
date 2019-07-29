@@ -14,10 +14,10 @@ class ViewController: UIViewController, UITextFieldDelegate {
     
     var shapeLayer: CAShapeLayer!
     var pulsatingLayer: CAShapeLayer!
-    private let segueIdentifier = "graphSegue"
+    private let segueIdentifier  = "graphSegue"
     let numberToolbar: UIToolbar = UIToolbar()
-    var errorTitle: String = ""
-    var errorMessage: String = ""
+    var errorTitle: String       = ""
+    var errorMessage: String     = ""
     
     // MARK: - Override Functions
     
@@ -51,16 +51,16 @@ class ViewController: UIViewController, UITextFieldDelegate {
     // MARK: - TextField Delegate Functions
     
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
-        let allowedCharacters = "0123456789."
+        let allowedCharacters   = "0123456789."
         let allowedCharacterSet = CharacterSet(charactersIn: allowedCharacters)
-        let typedCharacterSet = CharacterSet(charactersIn: string)
+        let typedCharacterSet   = CharacterSet(charactersIn: string)
         return allowedCharacterSet.isSuperset(of: typedCharacterSet)
     }
     
     // MARK: - Helper Functions
     
     private func showProgress() {
-        let percent = LogController.shared.percentOfReachingGoal()
+        let percent          = LogController.shared.percentOfReachingGoal()
         percentageLabel.text = "\(Int(percent * 100))%"
         shapeLayer.strokeEnd = CGFloat(percent)
     }
@@ -71,7 +71,6 @@ class ViewController: UIViewController, UITextFieldDelegate {
         let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(swipeLeftGesture(gesture:)))
         swipeLeft.direction = .left
         self.view.addGestureRecognizer(swipeLeft)
-        
         view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleTap)))
     }
     
@@ -85,15 +84,15 @@ class ViewController: UIViewController, UITextFieldDelegate {
         
         numberToolbar.sizeToFit()
         weightTextField.inputAccessoryView = numberToolbar
-        goalTextField.inputAccessoryView = numberToolbar
+        goalTextField.inputAccessoryView   = numberToolbar
     }
     
     private func setupTextFieldLayers() {
         weightTextField.delegate = self
-        goalTextField.delegate = self
+        goalTextField.delegate   = self
         
         weightTextField.keyboardType = .decimalPad
-        goalTextField.keyboardType = .decimalPad
+        goalTextField.keyboardType   = .decimalPad
         
         logStackView.addArrangedSubview(weightTextField)
         logStackView.addArrangedSubview(goalTextField)
@@ -139,24 +138,24 @@ class ViewController: UIViewController, UITextFieldDelegate {
     }
     
     private func createCircleShapeLayer(strokeColor: UIColor, fillColor: UIColor) -> CAShapeLayer {
-        let circularPath = UIBezierPath(arcCenter: .zero, radius: 100, startAngle: 0, endAngle: 2 * CGFloat.pi, clockwise: true)
-        let layer = CAShapeLayer()
-        layer.path = circularPath.cgPath
+        let circularPath  = UIBezierPath(arcCenter: .zero, radius: 100, startAngle: 0, endAngle: 2 * CGFloat.pi, clockwise: true)
+        let layer         = CAShapeLayer()
+        layer.path        = circularPath.cgPath
         layer.strokeColor = strokeColor.cgColor
-        layer.lineWidth = 20
-        layer.fillColor = fillColor.cgColor
-        layer.lineCap = CAShapeLayerLineCap.round
-        layer.position = view.center
+        layer.lineWidth   = 20
+        layer.fillColor   = fillColor.cgColor
+        layer.lineCap     = CAShapeLayerLineCap.round
+        layer.position    = view.center
         return layer
     }
     
     private func animatePulsatingLayer() {
-        let animation = CABasicAnimation(keyPath: "transform.scale")
-        animation.toValue = 1.5
-        animation.duration = 0.8
+        let animation            = CABasicAnimation(keyPath: "transform.scale")
+        animation.toValue        = 1.5
+        animation.duration       = 0.8
         animation.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeOut)
-        animation.autoreverses = true
-        animation.repeatCount = Float.infinity
+        animation.autoreverses   = true
+        animation.repeatCount    = Float.infinity
         pulsatingLayer.add(animation, forKey: "pulsing")
     }
     
@@ -229,9 +228,9 @@ class ViewController: UIViewController, UITextFieldDelegate {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
         label.textAlignment = .center
-        label.text = "0%"
-        label.textColor = .white
-        label.font = UIFont.boldSystemFont(ofSize: 32)
+        label.text          = "0%"
+        label.textColor     = .white
+        label.font          = UIFont.boldSystemFont(ofSize: 32)
         return label
     }()
     
@@ -239,9 +238,9 @@ class ViewController: UIViewController, UITextFieldDelegate {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
         label.textAlignment = .center
-        label.text = "Completed"
-        label.textColor = .white
-        label.font = UIFont.boldSystemFont(ofSize: 15)
+        label.text          = "Completed"
+        label.textColor     = .white
+        label.font          = UIFont.boldSystemFont(ofSize: 15)
         return label
     }()
     
@@ -272,9 +271,9 @@ class ViewController: UIViewController, UITextFieldDelegate {
     let logStackView: UIStackView = {
         let stackView = UIStackView()
         stackView.translatesAutoresizingMaskIntoConstraints = false
-        stackView.spacing = 5
-        stackView.isHidden = true
-        stackView.axis = .vertical
+        stackView.spacing      = 5
+        stackView.isHidden     = true
+        stackView.axis         = .vertical
         stackView.distribution = .fill
         return stackView
     }()
@@ -282,8 +281,8 @@ class ViewController: UIViewController, UITextFieldDelegate {
     let percentStackView: UIStackView = {
         let stackView = UIStackView()
         stackView.translatesAutoresizingMaskIntoConstraints = false
-        stackView.spacing = 1
-        stackView.axis = .vertical
+        stackView.spacing      = 1
+        stackView.axis         = .vertical
         stackView.distribution = .fill
         return stackView
     }()
